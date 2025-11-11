@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Skill4Green — Teste IA & CV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="./style.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Skill4Green • IA Service Tester</h1>
+      <p class="subtitle">Teste rápido de recomendações, motivação e comparação de imagens.</p>
+    </header>
+
+    <section class="card">
+      <h2>Config</h2>
+      <div class="row">
+        <label for="baseUrl">Base URL</label>
+        <input id="baseUrl" type="text" value="http://localhost:8008" />
+      </div>
+      <div class="row inline">
+        <button id="btnHealth">Testar /health</button>
+        <pre id="healthOut" class="out"></pre>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>/ai/recommendations</h2>
+      <div class="row">
+        <label for="recSummary">user_summary (JSON)</label>
+        <textarea id="recSummary" rows="10">
+{
+  "user": {"id":"4c1f-123","name":"Ana"},
+  "department": "TI",
+  "skills": ["eletrica_basica","automacao","interesse_aprender"],
+  "recent_tasks": [
+    {"task_code":"AC_OFF_AFTER_HOURS","count":5},
+    {"task_code":"LED_REPLACE","count":2}
+  ],
+  "goals": {"dept_kwh_reduction_pct": 5}
+}
+        </textarea>
+      </div>
+      <div class="row inline">
+        <label for="recMax">max_items</label>
+        <input id="recMax" type="number" value="4" min="1" max="8" />
+        <button id="btnRec">Gerar recomendações</button>
+      </div>
+      <pre id="recOut" class="out"></pre>
+    </section>
+
+    <section class="card">
+      <h2>/ai/motivation</h2>
+      <div class="grid">
+        <div class="row">
+          <label for="motName">Nome (opcional)</label>
+          <input id="motName" type="text" placeholder="Ana" />
+        </div>
+        <div class="row">
+          <label for="motKwh">kWh</label>
+          <input id="motKwh" type="number" step="0.01" value="2.4" />
+        </div>
+        <div class="row">
+          <label for="motCo2">CO₂ (kg) (opcional)</label>
+          <input id="motCo2" type="number" step="0.001" placeholder="deixe vazio p/ autocalcular" />
+        </div>
+        <div class="row">
+          <label for="motCost">Custo (R$) (opcional)</label>
+          <input id="motCost" type="number" step="0.01" placeholder="deixe vazio p/ autocalcular" />
+        </div>
+      </div>
+      <div class="row inline">
+        <button id="btnMot">Gerar mensagem</button>
+      </div>
+      <pre id="motOut" class="out"></pre>
+    </section>
+
+    <section class="card">
+      <h2>/cv/compare</h2>
+      <div class="grid">
+        <div class="row">
+          <label for="before">Foto “Antes”</label>
+          <input id="before" type="file" accept="image/*" />
+        </div>
+        <div class="row">
+          <label for="after">Foto “Depois”</label>
+          <input id="after" type="file" accept="image/*" />
+        </div>
+      </div>
+      <div class="row inline">
+        <button id="btnCv">Comparar</button>
+      </div>
+      <pre id="cvOut" class="out"></pre>
+    </section>
+
+    <footer>
+      <small>Skill4Green — protótipo de teste (HTML/CSS/JS puros)</small>
+    </footer>
+  </div>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+
+    function setLoading(btn, loading) {
+      btn.disabled = loading;
+      btn.textContent = loading ? 'Aguarde…' : btn.dataset.label;
+    }
+
+    async function postJson(url, body) {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+      return await r.json();
+    }
+
+    async function postForm(url, formData) {
+      const r = await fetch(url, { method: 'POST', body: formData });
+      if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+      return await r.json();
+    }
+
+    // HEALTH
+    (function(){
+      const btn = $('#btnHealth');
+      btn.dataset.label = 'Testar /health';
+      btn.addEventListener('click', async () => {
+        const base = $('#baseUrl').value.trim().replace(/\/$/, '');
+        setLoading(btn, true);
+        try {
+          const r = await fetch(`${base}/health`);
+          const j = await r.json();
+          $('#healthOut').textContent = JSON.stringify(j, null, 2);
+        } catch (e) {
+          $('#healthOut').textContent = 'Erro: ' + e.message;
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    })();
+
+    // RECOMMENDATIONS
+    (function(){
+      const btn = $('#btnRec');
+      btn.dataset.label = 'Gerar recomendações';
+      btn.addEventListener('click', async () => {
+        const base = $('#baseUrl').value.trim().replace(/\/$/, '');
+        const maxItems = parseInt($('#recMax').value, 10) || 4;
+        let summary = {};
+        try {
+          summary = JSON.parse($('#recSummary').value);
+        } catch (e) {
+          $('#recOut').textContent = 'JSON inválido em user_summary.';
+          return;
+        }
+        setLoading(btn, true);
+        try {
+          const payload = { user_summary: summary, max_items: maxItems };
+          const data = await postJson(`${base}/ai/recommendations`, payload);
+          $('#recOut').textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          $('#recOut').textContent = 'Erro: ' + e.message;
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    })();
+
+    // MOTIVATION
+    (function(){
+      const btn = $('#btnMot');
+      btn.dataset.label = 'Gerar mensagem';
+      btn.addEventListener('click', async () => {
+        const base = $('#baseUrl').value.trim().replace(/\/$/, '');
+        const name = $('#motName').value || null;
+        const kwh = parseFloat($('#motKwh').value || '0') || 0;
+        const co2v = $('#motCo2').value;
+        const costv = $('#motCost').value;
+
+        const payload = {
+          name,
+          kwh,
+          co2: co2v ? parseFloat(co2v) : null,
+          cost: costv ? parseFloat(costv) : null
+        };
+        setLoading(btn, true);
+        try {
+          const data = await postJson(`${base}/ai/motivation`, payload);
+          $('#motOut').textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          $('#motOut').textContent = 'Erro: ' + e.message;
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    })();
+
+    // CV COMPARE
+    (function(){
+      const btn = $('#btnCv');
+      btn.dataset.label = 'Comparar';
+      btn.addEventListener('click', async () => {
+        const base = $('#baseUrl').value.trim().replace(/\/$/, '');
+        const beforeFile = $('#before').files[0];
+        const afterFile = $('#after').files[0];
+        if (!beforeFile || !afterFile) {
+          $('#cvOut').textContent = 'Selecione as duas imagens.';
+          return;
+        }
+        const fd = new FormData();
+        fd.append('before', beforeFile);
+        fd.append('after', afterFile);
+
+        setLoading(btn, true);
+        try {
+          const data = await postForm(`${base}/cv/compare`, fd);
+          $('#cvOut').textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          $('#cvOut').textContent = 'Erro: ' + e.message;
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
