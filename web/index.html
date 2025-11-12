@@ -89,9 +89,13 @@
         </div>
       </div>
       <div class="row inline">
-        <button id="btnCv">Comparar</button>
+        <button id="btnCv">Comparar (SSIM)</button>
+        <!-- NOVO botão -->
+        <button id="btnCvVerify">Verificar (SSIM + YOLO)</button>
       </div>
       <pre id="cvOut" class="out"></pre>
+      <!-- NOVO output -->
+      <pre id="cvVerifyOut" class="out"></pre>
     </section>
 
     <footer>
@@ -225,6 +229,42 @@
         }
       });
     })();
+    // CV VERIFY (SSIM + YOLO)
+  (function(){
+    const btn = document.querySelector('#btnCvVerify');
+    if (!btn) return;
+    btn.dataset.label = 'Verificar (SSIM + YOLO)';
+    btn.addEventListener('click', async () => {
+      const base = document.querySelector('#baseUrl').value.trim().replace(/\/$/, '');
+      const beforeFile = document.querySelector('#before').files[0];
+      const afterFile  = document.querySelector('#after').files[0];
+      const out = document.querySelector('#cvVerifyOut');
+
+      if (!beforeFile || !afterFile) {
+        out.textContent = 'Selecione as duas imagens.';
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append('before', beforeFile);
+      fd.append('after',  afterFile);
+
+      btn.disabled = true;
+      btn.textContent = 'Aguarde…';
+      try {
+        const resp = await fetch(`${base}/cv/verify`, { method: 'POST', body: fd });
+        if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+        const data = await resp.json();
+        out.textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        out.textContent = 'Erro: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.label;
+      }
+    });
+  })();
+</script>
   </script>
 </body>
 </html>

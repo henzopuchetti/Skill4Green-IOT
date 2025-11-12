@@ -1,8 +1,19 @@
+# FastAPI core
 fastapi==0.115.0
 uvicorn==0.30.0
+
+# HTTP e env
 httpx==0.27.2
 python-dotenv==1.0.1
+
+# Upload multipart
+python-multipart==0.0.9
+
+# CV
 scikit-image==0.24.0
 opencv-python-headless==4.10.0.84
-# YOLO opcional (deixe comentado por enquanto):
-# ultralytics==8.3.34
+
+# YOLO (Ultralytics) + Torch CPU
+ultralytics==8.3.34
+torch==2.3.1
+torchvision==0.18.1
