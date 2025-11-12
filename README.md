@@ -1,6 +1,6 @@
-# 🌱 Skill4Green — Módulo de IA & IoT (Challenge IOT)
+# 🌱 Skill4Green — Módulo de IA & IoT (Global Soluction)
 
-**Repositório:** [github.com/henzopuchetti/Challenge-IOT](https://github.com/henzopuchetti/Challenge-IOT.git)
+**Repositório:** [github.com/henzopuchetti/Skill4Green-IOT.git](https://github.com/henzopuchetti/Skill4Green-IOT.git)
 
 ---
 
@@ -35,7 +35,7 @@ Este módulo em **Python (FastAPI)** integra:
 ## 🧾 Estrutura do Projeto
 
 ```
-Challenge-IOT/
+Skill4Green-IOT/
 │
 ├── app/
 │   ├── main.py                # Ponto principal da API (rotas FastAPI)
@@ -78,8 +78,8 @@ YOLO_DELTA_MIN=1
 
 ### 1️⃣ Clonar o repositório
 ```bash
-git clone https://github.com/henzopuchetti/Challenge-IOT.git
-cd Challenge-IOT
+git clone https://github.com/henzopuchetti/Skill4Green-IOT.git
+cd Skill4Green-IOT
 ```
 
 ### 2️⃣ Criar e ativar o ambiente virtual
