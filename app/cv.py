@@ -1,6 +1,8 @@
 from fastapi import UploadFile
 from skimage.metrics import structural_similarity as ssim
-import numpy as np, cv2
+import numpy as np
+import cv2
+
 
 def _to_gray_512(img_bytes: bytes):
     arr = np.frombuffer(img_bytes, np.uint8)
@@ -9,6 +11,7 @@ def _to_gray_512(img_bytes: bytes):
         raise ValueError("Imagem inválida")
     img = cv2.resize(img, (512, 512))
     return img
+
 
 async def compare_before_after(before: UploadFile, after: UploadFile):
     b = await before.read()

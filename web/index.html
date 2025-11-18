@@ -10,7 +10,7 @@
   <div class="container">
     <header>
       <h1>Skill4Green • IA Service Tester</h1>
-      <p class="subtitle">Teste rápido de recomendações, motivação e comparação de imagens.</p>
+      <p class="subtitle">Teste rápido de recomendações, motivação e verificação de imagens (SSIM + YOLO).</p>
     </header>
 
     <section class="card">
@@ -58,8 +58,16 @@
           <input id="motName" type="text" placeholder="Ana" />
         </div>
         <div class="row">
-          <label for="motKwh">kWh</label>
-          <input id="motKwh" type="number" step="0.01" value="2.4" />
+          <label for="motTask">task_code</label>
+          <input id="motTask" type="text" value="AC_OFF_AFTER_HOURS" />
+        </div>
+        <div class="row">
+          <label for="motExec">Execuções</label>
+          <input id="motExec" type="number" min="1" value="1" />
+        </div>
+        <div class="row">
+          <label for="motKwh">kWh (opcional – sobrescreve cálculo)</label>
+          <input id="motKwh" type="number" step="0.01" placeholder="deixe vazio p/ usar padrão da tarefa" />
         </div>
         <div class="row">
           <label for="motCo2">CO₂ (kg) (opcional)</label>
@@ -77,7 +85,7 @@
     </section>
 
     <section class="card">
-      <h2>/cv/compare</h2>
+      <h2>/cv/verify (SSIM + YOLO)</h2>
       <div class="grid">
         <div class="row">
           <label for="before">Foto “Antes”</label>
@@ -89,12 +97,8 @@
         </div>
       </div>
       <div class="row inline">
-        <button id="btnCv">Comparar (SSIM)</button>
-        <!-- NOVO botão -->
         <button id="btnCvVerify">Verificar (SSIM + YOLO)</button>
       </div>
-      <pre id="cvOut" class="out"></pre>
-      <!-- NOVO output -->
       <pre id="cvVerifyOut" class="out"></pre>
     </section>
 
@@ -117,12 +121,6 @@
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify(body)
       });
-      if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-      return await r.json();
-    }
-
-    async function postForm(url, formData) {
-      const r = await fetch(url, { method: 'POST', body: formData });
       if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
       return await r.json();
     }
@@ -180,16 +178,27 @@
       btn.addEventListener('click', async () => {
         const base = $('#baseUrl').value.trim().replace(/\/$/, '');
         const name = $('#motName').value || null;
-        const kwh = parseFloat($('#motKwh').value || '0') || 0;
+        const taskCode = $('#motTask').value.trim();
+        const execs = parseInt($('#motExec').value || '1', 10) || 1;
+
+        if (!taskCode) {
+          $('#motOut').textContent = 'Informe um task_code.';
+          return;
+        }
+
+        const kwhv = $('#motKwh').value;
         const co2v = $('#motCo2').value;
         const costv = $('#motCost').value;
 
         const payload = {
+          task_code: taskCode,
+          executions: execs,
           name,
-          kwh,
+          kwh: kwhv ? parseFloat(kwhv) : null,
           co2: co2v ? parseFloat(co2v) : null,
           cost: costv ? parseFloat(costv) : null
         };
+
         setLoading(btn, true);
         try {
           const data = await postJson(`${base}/ai/motivation`, payload);
@@ -202,69 +211,39 @@
       });
     })();
 
-    // CV COMPARE
+    // CV VERIFY (SSIM + YOLO)
     (function(){
-      const btn = $('#btnCv');
-      btn.dataset.label = 'Comparar';
+      const btn = $('#btnCvVerify');
+      if (!btn) return;
+      btn.dataset.label = 'Verificar (SSIM + YOLO)';
       btn.addEventListener('click', async () => {
         const base = $('#baseUrl').value.trim().replace(/\/$/, '');
         const beforeFile = $('#before').files[0];
-        const afterFile = $('#after').files[0];
+        const afterFile  = $('#after').files[0];
+        const out = $('#cvVerifyOut');
+
         if (!beforeFile || !afterFile) {
-          $('#cvOut').textContent = 'Selecione as duas imagens.';
+          out.textContent = 'Selecione as duas imagens.';
           return;
         }
+
         const fd = new FormData();
         fd.append('before', beforeFile);
-        fd.append('after', afterFile);
+        fd.append('after',  afterFile);
 
         setLoading(btn, true);
         try {
-          const data = await postForm(`${base}/cv/compare`, fd);
-          $('#cvOut').textContent = JSON.stringify(data, null, 2);
+          const resp = await fetch(`${base}/cv/verify`, { method: 'POST', body: fd });
+          if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+          const data = await resp.json();
+          out.textContent = JSON.stringify(data, null, 2);
         } catch (e) {
-          $('#cvOut').textContent = 'Erro: ' + e.message;
+          out.textContent = 'Erro: ' + e.message;
         } finally {
           setLoading(btn, false);
         }
       });
     })();
-    // CV VERIFY (SSIM + YOLO)
-  (function(){
-    const btn = document.querySelector('#btnCvVerify');
-    if (!btn) return;
-    btn.dataset.label = 'Verificar (SSIM + YOLO)';
-    btn.addEventListener('click', async () => {
-      const base = document.querySelector('#baseUrl').value.trim().replace(/\/$/, '');
-      const beforeFile = document.querySelector('#before').files[0];
-      const afterFile  = document.querySelector('#after').files[0];
-      const out = document.querySelector('#cvVerifyOut');
-
-      if (!beforeFile || !afterFile) {
-        out.textContent = 'Selecione as duas imagens.';
-        return;
-      }
-
-      const fd = new FormData();
-      fd.append('before', beforeFile);
-      fd.append('after',  afterFile);
-
-      btn.disabled = true;
-      btn.textContent = 'Aguarde…';
-      try {
-        const resp = await fetch(`${base}/cv/verify`, { method: 'POST', body: fd });
-        if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-        const data = await resp.json();
-        out.textContent = JSON.stringify(data, null, 2);
-      } catch (e) {
-        out.textContent = 'Erro: ' + e.message;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = btn.dataset.label;
-      }
-    });
-  })();
-</script>
   </script>
 </body>
 </html>

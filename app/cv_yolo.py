@@ -1,5 +1,4 @@
 # app/cv_yolo.py
-import io
 from typing import Dict, Any, List
 import numpy as np
 import cv2
@@ -14,6 +13,7 @@ except Exception as e:
 
 _model_cache = {"model": None, "names": {}}
 
+
 def _ensure_model():
     if YOLO is None:
         raise RuntimeError("Ultralytics/YOLO não disponível. Verifique instalação.")
@@ -25,12 +25,14 @@ def _ensure_model():
         _model_cache["names"] = names or {}
     return _model_cache["model"], _model_cache["names"]
 
+
 def _bytes_to_bgr(img_bytes: bytes) -> np.ndarray:
     arr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if img is None:
         raise ValueError("Imagem inválida")
     return img
+
 
 def yolo_infer(img_bytes: bytes) -> Dict[str, Any]:
     model, names = _ensure_model()
@@ -49,5 +51,5 @@ def yolo_infer(img_bytes: bytes) -> Dict[str, Any]:
     return {
         "count_total": len(classes),
         "counts_by_class": counts,
-        "scores_sample": scores[:5]
+        "scores_sample": scores[:5],
     }

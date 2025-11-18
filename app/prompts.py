@@ -4,6 +4,7 @@ def sys_prompt():
         "curtas, específicas, acionáveis, alinhadas a sustentabilidade corporativa."
     )
 
+
 def build_recommendations_prompt(user_summary: dict, max_items: int = 4) -> str:
     """
     user_summary (exemplo):
@@ -30,6 +31,7 @@ Tarefa:
 Formato de saída:
 - Uma lista de itens, um por linha, sem numeração.
 """.strip()
+
 
 def build_motivation_prompt(last_saved: dict) -> str:
     """
