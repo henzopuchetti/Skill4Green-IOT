@@ -93,7 +93,7 @@ cd Skill4Green-IOT
 
 ```bash
 python -m venv .venv
-.\.venv\Scriptsctivate   # Windows
+.venv\Scripts\activate   # Windows
 # ou
 source .venv/bin/activate  # Linux/Mac
 ```
