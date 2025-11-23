@@ -165,13 +165,6 @@ Isso garante que, mesmo em outro computador ou servidor, o projeto instale **as 
 
 ---
 
-## 👨‍💻 Autor
-
-**Henzo Boschiero Puchetti**  
-📍 [GitHub](https://github.com/henzopuchetti)
-
----
-
 ### ✅ Resumo Rápido
 
 ```bash
