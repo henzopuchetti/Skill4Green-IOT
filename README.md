@@ -107,7 +107,7 @@ pip install -r requirements.txt
 
 ### 4️⃣ Criar o arquivo `.env`
 
-Troque o nome do arquivo de .env.sample para apenas .env
+Crie um arquivo com o nome de .env, copie o conteudo de .env.sample.
 
 Abra o `.env` e adicione **sua chave da API da Groq** obtida em  
 👉 https://console.groq.com
